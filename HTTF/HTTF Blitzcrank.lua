@@ -1,4 +1,4 @@
-local Version = "1.241"
+local Version = "1.25"
 local AutoUpdate = true
 
 if myHero.charName ~= "Blitzcrank" then
@@ -86,7 +86,7 @@ function Variables()
   I = {range = 600, ready}
   S = {range = 760, ready}
   
-  AddRange = GetDistance(myHero.minBBox)/2
+  AddRange = myHero.boundingRadius
   TrueRange = myHero.range+AddRange
   
   QTargetRange = Q.range+100
@@ -94,17 +94,6 @@ function Variables()
   
   QMinionRange = Q.range+100
   QJunglemobRange = Q.range+100
-  
-  Items =
-  {
-  ["BC"] = {id=3144, range = 450, slot = nil, ready},
-  ["BRK"] = {id=3153, range = 450, slot = nil, ready},
-  ["Stalker"] = {id=3706, slot = nil, ready},
-  ["StalkerW"] = {id=3707, slot = nil},
-  ["StalkerM"] = {id=3708, slot = nil},
-  ["StalkerJ"] = {id=3709, slot = nil},
-  ["StalkerD"] = {id=3710, slot = nil}
-  }
   
   S5SR = false
   TT = false
@@ -213,7 +202,7 @@ function BlitzcrankMenu()
       Menu.BlackList:addSubMenu("Combo", "Combo")
       for i, enemy in ipairs(EnemyHeroes) do
       
-        if enemy.charName == "Alistar" or enemy.charName == "Garen" then
+        if enemy.charName == "Alistar" or enemy.charName == "Alistar" or enemy.charName == "Amumu" then
           Menu.BlackList.Combo:addParam(enemy.charName, enemy.charName, SCRIPT_PARAM_ONOFF, true)
         else
           Menu.BlackList.Combo:addParam(enemy.charName, enemy.charName, SCRIPT_PARAM_ONOFF, false)
@@ -328,11 +317,10 @@ function BlitzcrankMenu()
   Menu:addSubMenu("Flee Settings", "Flee")
     Menu.Flee:addParam("On", "Flee (Only Use KillSteal)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
     
-  if VIP_USER then
   Menu:addSubMenu("Misc Settings", "Misc")
-    Menu.Misc:addParam("UsePacket", "Use Packet", SCRIPT_PARAM_ONOFF, true)
-  end
-  
+    Menu.Misc:addParam("MinRange", "Min range to grab enemy", SCRIPT_PARAM_SLICE, 400, 0, 800, -1)
+    Menu.Misc:addParam("E", "Use E if grab enemy", SCRIPT_PARAM_ONOFF, true)
+    
   Menu:addSubMenu("Draw Settings", "Draw")
   
     Menu.Draw:addSubMenu("Draw Target", "Target")
@@ -429,14 +417,6 @@ function Checks()
   I.ready = Ignite ~= nil and myHero:CanUseSpell(Ignite) == READY
   S.ready = Smite ~= nil and myHero:CanUseSpell(Smite) == READY
   
-  for _, item in pairs(Items) do
-    item.slot = GetInventorySlotItem(item.id)
-  end
-  
-  Items["BC"].ready = Items["BC"].slot and myHero:CanUseSpell(Items["BC"].slot) == READY
-  Items["BRK"].ready = Items["BRK"].slot and myHero:CanUseSpell(Items["BRK"].slot) == READY
-  Items["Stalker"].ready = Smite ~= nil and (Items["Stalker"].slot or Items["StalkerW"].slot or Items["StalkerM"].slot or Items["StalkerJ"].slot or Items["StalkerD"].slot) and myHero:CanUseSpell(Smite) == READY
-  
   Q.level = myHero:GetSpellData(_Q).level
   W.level = myHero:GetSpellData(_W).level
   E.level = myHero:GetSpellData(_E).level
@@ -445,7 +425,7 @@ function Checks()
   EnemyMinions:update()
   JungleMobs:update()
   
-  AddRange = GetDistance(myHero.minBBox)/2
+  AddRange = myHero.boundingRadius
   TrueRange = myHero.range+AddRange
   
 end
@@ -518,34 +498,6 @@ function Combo()
       
         if ComboR2 then
           CastR(enemy, "ComboM")
-        end
-        
-      end
-      
-    end
-    
-  end
-  
-  if STarget ~= nil then
-  
-    local ComboItem = Menu.Combo.Item
-    
-    if ComboItem then
-    
-      local ComboBRK = Menu.Combo.BRK
-      local BCSTargetDmg = GetDmg("BC", STarget)
-      local BRKSTargetDmg = GetDmg("BRK", STarget)
-      
-      if Items["Stalker"].ready and ValidTarget(STarget, S.range) then
-        CastS(STarget)
-      end
-      
-      if ComboBRK >= HealthPercent(myHero) then
-      
-        if Items["BC"].ready and ValidTarget(STarget, Items["BC"].range) then
-          CastBC(STarget)
-        elseif Items["BRK"].ready and ValidTarget(STarget, Items["BRK"].range) then
-          CastBRK(STarget)
         end
         
       end
@@ -833,11 +785,6 @@ function KillSteal()
       CastI(enemy)
     end
     
-    if Items["Stalker"].ready and KillStealS and SBTargetDmg >= enemy.health and ValidTarget(enemy, S.range) then
-      CastS(enemy)
-      return
-    end
-    
     if Q.ready and KillStealQ and QTargetDmg >= enemy.health and ValidTarget(enemy, Q.range+100) then
       CastQ(enemy)
     end
@@ -855,7 +802,7 @@ end
 ---------------------------------------------------------------------------------
 
 function unitAddRange(unit)
-  return GetDistance(unit.minBBox, unit)/2
+  return unit.boundingRadius
 end
 
 ---------------------------------------------------------------------------------
@@ -949,7 +896,7 @@ end
 
 function CastQ(unit, mode)
 
-  if unit.dead or mode == "Combo" and Menu.BlackList.Combo[unit.charName] or mode == "Harass" and Menu.BlackList.Harass[unit.charName] then
+  if unit.dead or mode == "Combo" and Menu.BlackList.Combo[unit.charName] or mode == "Harass" and Menu.BlackList.Harass[unit.charName] or mode == nil and GetDistance(unit, myHero) <= Menu.Misc.MinRange then
     QPos = nil
     QHitChance = nil
     return
@@ -967,13 +914,7 @@ function CastQ(unit, mode)
   end
   
   if mode == "Combo" and QHitChance >= Menu.HitChance.Combo.Q or mode == "Harass" and QHitChance >= Menu.HitChance.Harass.Q or mode == nil and QHitChance > 1 then
-  
-    if VIP_USER and Menu.Misc.UsePacket then
-      Packet("S_CAST", {spellId = _Q, toX = QPos.x, toY = QPos.z, fromX = QPos.x, fromY = QPos.z}):send()
-    else
-      CastSpell(_Q, QPos.x, QPos.z)
-    end
-    
+    CastSpell(_Q, QPos.x, QPos.z)
   end
   
 end
@@ -981,25 +922,13 @@ end
 ---------------------------------------------------------------------------------
 
 function CastW()
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = _W}):send()
-  else
-    CastSpell(_W)
-  end
-  
+  CastSpell(_W)
 end
 
 ---------------------------------------------------------------------------------
 
 function CastE()
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = _E}):send()
-  else
-    CastSpell(_E)
-  end
-  
+  CastSpell(_E)
 end
 
 ---------------------------------------------------------------------------------
@@ -1013,13 +942,7 @@ function CastR(unit, mode)
   local RPos, RHitChance, RNoH = HPred:GetPredict(HPred.Presets['Blitzcrank']["R"], unit, myHero, true)
   
   if mode == "ComboM" and RNoH >= Menu.Combo.R4 or mode == nil and RHitChance == 3 then
-  
-    if VIP_USER and Menu.Misc.UsePacket then
-      Packet("S_CAST", {spellId = _R}):send()
-    else
-      CastSpell(_R)
-    end
-    
+    CastSpell(_R)
   end
   
 end
@@ -1027,49 +950,13 @@ end
 ---------------------------------------------------------------------------------
 
 function CastI(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Ignite, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Ignite, enemy)
-  end
-  
+  CastSpell(Ignite, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function CastS(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Smite, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Smite, enemy)
-  end
-  
-end
-
----------------------------------------------------------------------------------
-
-function CastBC(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Items["BC"].slot, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Items["BC"].slot, enemy)
-  end
-  
-end
-
----------------------------------------------------------------------------------
-
-function CastBRK(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Items["BRK"].slot, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Items["BRK"].slot, enemy)
-  end
-  
+  CastSpell(Smite, enemy)
 end
 
 ---------------------------------------------------------------------------------
@@ -1230,6 +1117,22 @@ function OnAnimation(unit, animation)
     IsRecall = true
   elseif animation == "recall_winddown" or animation == "Run" or animation == "Spell1" or animation == "Spell2" or animation == "Spell3" or animation == "Spell4" then
     IsRecall = false
+  end
+  
+end
+
+---------------------------------------------------------------------------------
+
+function OnUpdateBuff(unit, buff, stacks)
+
+  if unit == nil or unit.team == myHero.team or unit.type ~= myHero.type then
+    return
+  end
+  
+  if buff.name == "rocketgrab2" and Menu.Misc.E then
+    CastE()
+  else
+    --print(unit.name..": "..buff.name)
   end
   
 end
