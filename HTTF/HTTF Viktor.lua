@@ -1,4 +1,4 @@
-local Version = 1.26
+local Version = 1.27
 
 if myHero.charName ~= "Viktor" then
   return
@@ -324,7 +324,6 @@ function HTTF_Viktor:__init()
   AddCreateObjCallback(function(object) self:CreateObj(object) end)
   AddDeleteObjCallback(function(object) self:DeleteObj(object) end)
   AddProcessSpellCallback(function(unit, spell) self:ProcessSpell(unit, spell) end)
-  
 end
 
 ---------------------------------------------------------------------------------
@@ -571,8 +570,10 @@ function HTTF_Viktor:Menu()
   self.Menu:addSubMenu("Flee Settings", "Flee")
     self.Menu.Flee:addParam("On", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
     
+  if VIP_USER then
   self.Menu:addSubMenu("Misc", "Misc")
     self.Menu.Misc:addParam("BlockR", "Block R if HitChance < 2", SCRIPT_PARAM_ONOFF, true)
+  end
   
   self.Menu:addSubMenu("Draw Settings", "Draw")
   
@@ -1851,17 +1852,10 @@ function OnSendPacket(p)
 
   if HTTF_Viktor.Menu.Misc.BlockR then
   
-    if GetGameVersion():find("5.16.0.341") and p.header == 0x140 then
-      p.pos = 6
+    if GetGameVersion():find("5.18.0.291") and p.header == 0xC0 then
+      p.pos = 10
       
-      if p:Decode1() == 0x2D and not HTTF_Viktor:RHit() then
-        p:Block()
-      end
-      
-    elseif not GetGameVersion():find("5.16.0.341") and p.header == 0xE4 then
-      p.pos = 6
-      
-      if p:Decode1() == 0x82 and not HTTF_Viktor:RHit() then
+      if p:Decode1() == 0x7B and not HTTF_Viktor:RHit() then
         p:Block()
       end
       
