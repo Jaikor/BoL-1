@@ -1,4 +1,4 @@
-local Version = "1.255"
+local Version = "1.26"
 
 if myHero.charName ~= "Ezreal" then
   return
@@ -63,6 +63,7 @@ function HTTF_Ezreal:__init()
   self:Variables()
   self:Menu()
   DelayAction(function() self:Orbwalk() end, 1)
+  
   AddTickCallback(function() self:Tick() end)
   AddDrawCallback(function() self:Draw() end)
   AddAnimationCallback(function(unit, animation) self:Animation(unit, animation) end)
@@ -77,7 +78,7 @@ function HTTF_Ezreal:Variables()
   self.HPred = HPrediction()
   
   self.IsRecall = false
-  self.RebornLoaded, self.RevampedLoaded, self.MMALoaded, self.SxOrbLoaded, self.SOWLoaded = false, false, false, false, false
+  self.RebornLoaded, self.RevampedLoaded, self.MMALoaded, self.NOWLoaded, self.SxOrbLoaded, self.SOWLoaded = false, false, false, false, false, false, false
   
   if myHero:GetSpellData(SUMMONER_1).name:find("summonerdot") then
     self.Ignite = SUMMONER_1
@@ -91,17 +92,12 @@ function HTTF_Ezreal:Variables()
     self.Smite = SUMMONER_2
   end
   
-  self.Q = {range = 1200, width = 160, ready}
+  self.Q = {range = 1200, width = 120, ready}
   self.W = {range = 1050, width = 160, ready}
   self.E = {range = 475, ready}
   self.R = {range = 1000, width = 320, ready}
   self.I = {range = 600, ready}
   self.S = {range = 760, ready}
-  
-  self.AutoQEQE = {1, 3, 1, 3, 1, 4, 1, 3, 1, 3, 4, 2, 3, 2, 2, 4, 2, 2}
-  self.AutoQEWQ = {1, 3, 2, 1, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2}
-  self.AutoQEQW = {1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2}
-  self.AutoQWEW = {1, 2, 3, 2, 2, 4, 2, 3, 2, 3, 4, 3, 3, 1, 1, 4, 1, 1}
   
   self.Items =
   {
@@ -219,12 +215,12 @@ function HTTF_Ezreal:Menu()
   self.Menu:addSubMenu("HitChance Settings", "HitChance")
   
     self.Menu.HitChance:addSubMenu("Combo", "Combo")
-      self.Menu.HitChance.Combo:addParam("Q", "Q HitChacne (Default value = 1.02)", SCRIPT_PARAM_SLICE, 1.02, 1, 3, 2)
+      self.Menu.HitChance.Combo:addParam("Q", "Q HitChacne (Default value = 1)", SCRIPT_PARAM_SLICE, 1, 1, 3, 2)
       self.Menu.HitChance.Combo:addParam("W", "W HitChacne (Default value = 1.2)", SCRIPT_PARAM_SLICE, 1.2, 1, 3, 2)
       
     self.Menu.HitChance:addSubMenu("Harass", "Harass")
       self.Menu.HitChance.Harass:addParam("Q", "Q HitChacne (Default value = 1.4)", SCRIPT_PARAM_SLICE, 1.4, 1, 3, 2)
-      self.Menu.HitChance.Harass:addParam("W", "W HitChacne (Default value = 1.4)", SCRIPT_PARAM_SLICE, 1.4, 1, 3, 2)
+      self.Menu.HitChance.Harass:addParam("W", "W HitChacne (Default value = 1.6)", SCRIPT_PARAM_SLICE, 1.6, 1, 3, 2)
       
   self.Menu:addSubMenu("Combo Settings", "Combo")
     self.Menu.Combo:addParam("On", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -311,11 +307,6 @@ function HTTF_Ezreal:Menu()
   self.Menu:addSubMenu("Flee Settings", "Flee")
     self.Menu.Flee:addParam("On", "Flee (Only Use KillSteal)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
     
-  --[[if VIP_USER then self.Menu:addSubMenu("Misc Settings", "Misc")
-    self.Menu.Misc:addParam("AutoLevel", "Auto Level Spells", SCRIPT_PARAM_ONOFF, false)
-    self.Menu.Misc:addParam("ALOpt", "Skill order : ", SCRIPT_PARAM_LIST, 1, {"R>Q>E>W (QEQE)", "R>Q>E>W (QEQW)", "R>Q>E>W (QEWQ)", "R>Q>W>E (QWEQ)", "R>W>E>Q (QWEW)"})
-  end]]
-  
   self.Menu:addSubMenu("Draw Settings", "Draw")
   
     self.Menu.Draw:addSubMenu("Draw Target", "Target")
@@ -382,8 +373,10 @@ function HTTF_Ezreal:Orbwalk()
   elseif _G.MMA_IsLoaded then
     self.MMALoaded = true
     self:ScriptMsg("Found MMA.")
+  elseif _G.NebelwolfisOrbWalkerLoaded then
+    self.NOWLoaded = true
+    self:ScriptMsg("Found Nebelwolfi's Orbwalk.")
   elseif FileExist(LIB_PATH .. "SxOrbWalk.lua") then
-  
     require 'SxOrbWalk'
     
     self.SxOrbMenu = scriptConfig("SxOrb Settings", "SxOrb")
@@ -394,7 +387,6 @@ function HTTF_Ezreal:Orbwalk()
     self.SxOrbLoaded = true
     self:ScriptMsg("Found SxOrb.")
   elseif FileExist(LIB_PATH .. "SOW.lua") then
-  
     require 'SOW'
     require 'VPrediction'
     
@@ -430,16 +422,16 @@ function HTTF_Ezreal:Tick()
     self:Combo()
   end
   
+  if self.Menu.Harass.On or (self.Menu.Harass.On2 and not self.IsRecall) then
+    self:Harass()
+  end
+  
   if self.Menu.Clear.Farm.On then
     self:Farm()
   end
   
   if self.Menu.Clear.JFarm.On then
     self:JFarm()
-  end
-  
-  if self.Menu.Harass.On or (self.Menu.Harass.On2 and not self.IsRecall) then
-    self:Harass()
   end
   
   if self.Menu.LastHit.On then
@@ -461,10 +453,6 @@ function HTTF_Ezreal:Tick()
   if self.Menu.Flee.On then
     self:Flee()
   end
-  
-  --[[if self.Menu.Misc.AutoLevel then
-    self:AutoLevel()
-  end]]
   
 end
 
@@ -539,6 +527,8 @@ function HTTF_Ezreal:OrbwalkCanMove()
     return _G.AutoCarry.Orbwalker:CanMove()
   elseif self.MMALoaded then
     return _G.MMA_CanMove
+  elseif self.NOWLoaded then
+    return _G.NebelwolfisOrbWalker:TimeToMove()
   elseif self.SxOrbLoaded then
     return self.SxOrb:CanMove()
   elseif self.SOWLoaded then
@@ -908,65 +898,6 @@ function HTTF_Ezreal:Flee()
   
 end
 
----------------------------------------------------------------------------------
-
-function HTTF_Ezreal:AutoLevel()
-
-  if self.Menu.Misc.ALOpt == 1 then
-    self:AutoLevel2(self.AutoQEQE)
-  elseif self.Menu.Misc.ALOpt == 2 then
-    self:AutoLevel2(self.AutoQEQW)
-  elseif self.Menu.Misc.ALOpt == 3 then
-    self:AutoLevel2(self.AutoQEWQ)
-  elseif self.Menu.Misc.ALOpt == 4 then
-    self:AutoLevel2(self.AutoQWEQ)
-  elseif self.Menu.Misc.ALOpt == 5 then
-    self:AutoLevel2(self.AutoQWEW)
-  end
-  
-end
-
-function HTTF_Ezreal:AutoLevel2(sequence)
-
-  if self.Q.level+self.W.level+self.E.level+self.R.level < myHero.level then
-  
-    local spell = {_Q, _W, _E, _R}
-    local level = {0, 0, 0, 0}
-    
-    for i = 1, myHero.level do
-      level[sequence[i]] = level[sequence[i]]+1
-    end
-    
-    for i, j in ipairs({self.Q.level, self.W.level, self.E.level, self.R.level}) do
-    
-      if j < level[i] then
-        LevelSpell(spell[i])
-      end
-      
-    end
-    
-  end
-  
-end
-
-_G.LevelSpell = function(id)
-
-  local offsets = {[_Q] = 0x70, [_W] = 0xB0, [_E] = 0xF0, [_R] = 0x30,}
-  local p = CLoLPacket(0x0023)
-  
-  p.vTable = 0xE23A7C
-  p:EncodeF(myHero.networkID)
-  p:Encode4(0xBEBEBEBE)
-  p:Encode4(0x16161616)
-  p:Encode1(0x6B)
-  p:Encode4(0x7C7C7C7C)
-  p:Encode1(offsets[id])
-  p:Encode4(0x00000000)
-  p:Encode1(0x00)
-  SendPacket(p)
-  
-end
---https://github.com/LegendBot/Developer_Snippets/blob/master/LevelSpell.lua
 ---------------------------------------------------------------------------------
 
 function HTTF_Ezreal:HealthPercent()
