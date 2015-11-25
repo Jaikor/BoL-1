@@ -1,4 +1,4 @@
-local Version = 1.27
+local Version = 1.271
 
 if myHero.charName ~= "Viktor" then
   return
@@ -336,10 +336,10 @@ function HTTF_Viktor:Update()
   ToUpdate.VersionPath = "/BolHTTF/BoL/master/HTTF/Version/HTTF%20Viktor.version"
   ToUpdate.ScriptPath =  "/BolHTTF/BoL/master/HTTF/HTTF%20Viktor.lua"
   ToUpdate.SavePath = SCRIPT_PATH .. GetCurrentEnv().FILE_NAME
-  ToUpdate.CallbackUpdate = function(NewVersion, OldVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Updated to "..NewVersion..". </b></font>") end
-  ToUpdate.CallbackNoUpdate = function(OldVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">No Updates Found</b></font>") end
-  ToUpdate.CallbackNewVersion = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">New Version found ("..NewVersion.."). Please wait until its downloaded</b></font>") end
-  ToUpdate.CallbackError = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Error while Downloading. Please try again.</b></font>") end
+  ToUpdate.CallbackUpdate = function(NewVersion, OldVersion) print("<font color=\"#00FA9A\"><b>[HTTF Viktor] </b></font> <font color=\"#FFFFFF\">Updated to "..NewVersion..". </b></font>") end
+  ToUpdate.CallbackNoUpdate = function(OldVersion) print("<font color=\"#00FA9A\"><b>[HTTF Viktor] </b></font> <font color=\"#FFFFFF\">No Updates Found</b></font>") end
+  ToUpdate.CallbackNewVersion = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HTTF Viktor] </b></font> <font color=\"#FFFFFF\">New Version found ("..NewVersion.."). Please wait until its downloaded</b></font>") end
+  ToUpdate.CallbackError = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HTTF Viktor] </b></font> <font color=\"#FFFFFF\">Error while Downloading. Please try again.</b></font>") end
   ScriptUpdate(Version, true, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath, ToUpdate.SavePath, ToUpdate.CallbackUpdate,ToUpdate.CallbackNoUpdate, ToUpdate.CallbackNewVersion,ToUpdate.CallbackError)
 end
 
