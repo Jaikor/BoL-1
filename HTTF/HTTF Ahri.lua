@@ -1,4 +1,4 @@
-local Version = "1.004"
+local Version = "1.01"
 
 if myHero.charName ~= "Ahri" then
   return
@@ -104,17 +104,6 @@ function HTTF_Ahri:Variables()
   
   self.QMinionRange = self.Q.range+100
   self.QJunglemobRange = self.Q.range+100
-  
-  self.Items =
-  {
-  ["BC"] = {id=3144, range = 450, slot = nil, ready},
-  ["BRK"] = {id=3153, range = 450, slot = nil, ready},
-  ["Stalker"] = {id=3706, slot = nil, ready},
-  ["StalkerW"] = {id=3707, slot = nil},
-  ["StalkerM"] = {id=3708, slot = nil},
-  ["StalkerJ"] = {id=3709, slot = nil},
-  ["StalkerD"] = {id=3710, slot = nil}
-  }
   
   local S5SR = false
   local TT = false
@@ -235,9 +224,9 @@ function HTTF_Ahri:Menu()
       self.Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     self.Menu.Combo:addParam("E", "Use E", SCRIPT_PARAM_ONOFF, true)
     self.Menu.Combo:addParam("E2", "Use E if Mana Percent > x% (0)", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
-      self.Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+      --[[self.Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     self.Menu.Combo:addParam("Item", "Use Items", SCRIPT_PARAM_ONOFF, true)
-      self.Menu.Combo:addParam("BRK", "Use BRK if my own HP < x% (30)", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
+      self.Menu.Combo:addParam("BRK", "Use BRK if my own HP < x% (30)", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)]]
       
   self.Menu:addSubMenu("Clear Settings", "Clear")
   
@@ -302,11 +291,6 @@ function HTTF_Ahri:Menu()
   self.Menu:addSubMenu("Flee Settings", "Flee")
     self.Menu.Flee:addParam("On", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
     
-  if VIP_USER then
-  self.Menu:addSubMenu("Misc Settings", "Misc")
-    self.Menu.Misc:addParam("UsePacket", "Use Packet", SCRIPT_PARAM_ONOFF, true)
-  end
-  
   self.Menu:addSubMenu("Draw Settings", "Draw")
   
     self.Menu.Draw:addSubMenu("Draw Target", "Target")
@@ -464,14 +448,6 @@ function HTTF_Ahri:Checks()
   self.I.ready = self.Ignite ~= nil and myHero:CanUseSpell(self.Ignite) == READY
   self.S.ready = self.Smite ~= nil and myHero:CanUseSpell(self.Smite) == READY
   
-  for _, item in pairs(self.Items) do
-    item.slot = GetInventorySlotItem(item.id)
-  end
-  
-  self.Items["BC"].ready = self.Items["BC"].slot and myHero:CanUseSpell(self.Items["BC"].slot) == READY
-  self.Items["BRK"].ready = self.Items["BRK"].slot and myHero:CanUseSpell(self.Items["BRK"].slot) == READY
-  self.Items["Stalker"].ready = self.Smite ~= nil and (self.Items["Stalker"].slot or self.Items["StalkerW"].slot or self.Items["StalkerM"].slot or self.Items["StalkerJ"].slot or self.Items["StalkerD"].slot) and myHero:CanUseSpell(self.Smite) == READY
-  
   self.Q.level = myHero:GetSpellData(_Q).level
   self.E.level = myHero:GetSpellData(_E).level
   
@@ -504,7 +480,7 @@ function HTTF_Ahri:Combo()
   local ComboQ2 = self.Menu.Combo.Q2
   local ComboE = self.Menu.Combo.E
   local ComboE2 = self.Menu.Combo.E2
-  local ComboItem = self.Menu.Combo.Item
+  --local ComboItem = self.Menu.Combo.Item
   
   if self.QTarget ~= nil and self.Q.ready and ComboQ and ComboQ2 <= self:ManaPercent() and ValidTarget(self.QTarget, self.Q.range+100) then
     self:CastQ(self.QTarget, "Combo")
@@ -519,7 +495,7 @@ function HTTF_Ahri:Combo()
     
   end
   
-  if STarget ~= nil and ComboItem then
+  --[[if STarget ~= nil and ComboItem then
   
     local ComboBRK = self.Menu.Combo.BRK
     local BCSTargetDmg = self:GetDmg("BC", STarget)
@@ -540,7 +516,7 @@ function HTTF_Ahri:Combo()
       
     end
     
-  end
+  end]]
   
 end
 
@@ -769,17 +745,17 @@ function HTTF_Ahri:KillSteal()
     local QenemyDmg = KillStealQ and self.Q.ready and GetDistance(enemy, myHero) <= self.Q.range and self:GetDmg("Q", enemy)+self:GetDmg("Q2", enemy) or 0
     local EenemyDmg = KillStealE and self.E.ready and GetDistance(enemy, myHero) <= self.E.range and self:GetDmg("E", enemy) or 0
     local IenemyDmg = self.I.ready and self:GetDmg("IGNITE", enemy) or 0
-    local SBenemyDmg = self.Items["Stalker"].ready and self:GetDmg("STALKER", enemy) or 0
+    --local SBenemyDmg = self.Items["Stalker"].ready and self:GetDmg("STALKER", enemy) or 0
     
     if KillStealI and IenemyDmg >= enemy.health and ValidTarget(enemy, self.I.range) then
       self:CastI(enemy)
       return
     end
     
-    if KillStealS and SBenemyDmg >= enemy.health and ValidTarget(enemy, self.S.range) then
+    --[[if KillStealS and SBenemyDmg >= enemy.health and ValidTarget(enemy, self.S.range) then
       self:CastS(enemy)
       return
-    end
+    end]]
     
     if KillStealQ and QenemyDmg+EenemyDmg >= enemy.health and ValidTarget(enemy, self.Q.range+100) then
       self:CastQ(enemy)
@@ -903,13 +879,7 @@ function HTTF_Ahri:CastQ(unit, mode)
   self.QPos, self.QHitChance = self.HPred:GetPredict(self.HPred.Presets["Ahri"]["Q"], unit, myHero)
   
   if mode == "Combo" and self.QHitChance >= self.Menu.HitChance.Combo.Q or mode == "Harass" and self.QHitChance >= self.Menu.HitChance.Harass.Q or mode == nil and self.QHitChance > 0 then
-  
-    if VIP_USER and self.Menu.Misc.UsePacket then
-      Packet("S_CAST", {spellId = _Q, toX = self.QPos.x, toY = self.QPos.z, fromX = self.QPos.x, fromY = self.QPos.z}):send()
-    else
-      CastSpell(_Q, self.QPos.x, self.QPos.z)
-    end
-    
+    CastSpell(_Q, self.QPos.x, self.QPos.z)
   end
   
 end
@@ -925,13 +895,7 @@ function HTTF_Ahri:CastE(unit, mode)
   self.EPos, self.EHitChance = self.HPred:GetPredict(self.HPred.Presets["Ahri"]["E"], unit, myHero)
   
   if mode == "Combo" and self.EHitChance >= self.Menu.HitChance.Combo.E or mode == "Harass" and self.EHitChance >= self.Menu.HitChance.Harass.E or mode == nil and self.EHitChance > 0 then
-  
-    if VIP_USER and self.Menu.Misc.UsePacket then
-      Packet("S_CAST", {spellId = _E, toX = self.EPos.x, toY = self.EPos.z, fromX = self.EPos.x, fromY = self.EPos.z}):send()
-    else
-      CastSpell(_E, self.EPos.x, self.EPos.z)
-    end
-    
+    CastSpell(_E, self.EPos.x, self.EPos.z)
   end
   
 end
@@ -939,49 +903,25 @@ end
 ---------------------------------------------------------------------------------
 
 function HTTF_Ahri:CastI(enemy)
-
-  if VIP_USER and self.Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = self.Ignite, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(self.Ignite, enemy)
-  end
-  
+  CastSpell(self.Ignite, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function HTTF_Ahri:CastS(enemy)
-
-  if VIP_USER and self.Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = self.Smite, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(self.Smite, enemy)
-  end
-  
+  CastSpell(self.Smite, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function HTTF_Ahri:CastBC(enemy)
-
-  if VIP_USER and self.Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = self.Items["BC"].slot, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(self.Items["BC"].slot, enemy)
-  end
-  
+  CastSpell(self.Items["BC"].slot, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function HTTF_Ahri:CastBRK(enemy)
-
-  if VIP_USER and self.Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = self.Items["BRK"].slot, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(self.Items["BRK"].slot, enemy)
-  end
-  
+  CastSpell(self.Items["BRK"].slot, enemy)
 end
 
 ---------------------------------------------------------------------------------
