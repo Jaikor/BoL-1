@@ -1,4 +1,4 @@
-local Version = "1.132"
+local Version = "1.14"
 
 if myHero.charName ~= "Corki" then
   return
@@ -82,17 +82,6 @@ function Variables()
   
   QMinionRange = Q.range+Q.radius+100
   QJunglemobRange = Q.range+Q.radius+100
-  
-  Items =
-  {
-  ["BC"] = {id=3144, range = 450, slot = nil, ready},
-  ["BRK"] = {id=3153, range = 450, slot = nil, ready},
-  ["Stalker"] = {id=3706, slot = nil, ready},
-  ["StalkerW"] = {id=3707, slot = nil},
-  ["StalkerM"] = {id=3708, slot = nil},
-  ["StalkerJ"] = {id=3709, slot = nil},
-  ["StalkerD"] = {id=3710, slot = nil}
-  }
   
   S5SR = false
   TT = false
@@ -215,9 +204,9 @@ function CorkiMenu()
     Menu.Combo:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
     Menu.Combo:addParam("Info", "Use R if Mana Percent > x%", SCRIPT_PARAM_INFO, "")
     Menu.Combo:addParam("R2", "Default value = 0", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
-      Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+      --[[Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Combo:addParam("Item", "Use Items", SCRIPT_PARAM_ONOFF, true)
-      Menu.Combo:addParam("BRK", "Use BRK if my own HP < x%", SCRIPT_PARAM_SLICE, 40, 0, 100, 0)
+      Menu.Combo:addParam("BRK", "Use BRK if my own HP < x%", SCRIPT_PARAM_SLICE, 40, 0, 100, 0)]]
     
   Menu:addSubMenu("Clear Settings", "Clear")
   
@@ -295,11 +284,6 @@ function CorkiMenu()
   Menu:addSubMenu("Flee Settings", "Flee")
     Menu.Flee:addParam("On", "Flee (Only Use KillSteal)", SCRIPT_PARAM_ONKEYDOWN, false, GetKey('G'))
     
-  if VIP_USER then
-  Menu:addSubMenu("Misc Settings", "Misc")
-    Menu.Misc:addParam("UsePacket", "Use Packet", SCRIPT_PARAM_ONOFF, true)
-  end
-  
   Menu:addSubMenu("Draw Settings", "Draw")
   
     Menu.Draw:addSubMenu("Draw Target", "Target")
@@ -452,14 +436,6 @@ function Checks()
   I.ready = Ignite ~= nil and myHero:CanUseSpell(Ignite) == READY
   S.ready = Smite ~= nil and myHero:CanUseSpell(Smite) == READY
   
-  for _, item in pairs(Items) do
-    item.slot = GetInventorySlotItem(item.id)
-  end
-  
-  Items["BC"].ready = Items["BC"].slot and myHero:CanUseSpell(Items["BC"].slot) == READY
-  Items["BRK"].ready = Items["BRK"].slot and myHero:CanUseSpell(Items["BRK"].slot) == READY
-  Items["Stalker"].ready = Smite ~= nil and (Items["Stalker"].slot or Items["StalkerW"].slot or Items["StalkerM"].slot or Items["StalkerJ"].slot or Items["StalkerD"].slot) and myHero:CanUseSpell(Smite) == READY
-  
   Q.level = myHero:GetSpellData(_Q).level
   W.level = myHero:GetSpellData(_W).level
   E.level = myHero:GetSpellData(_E).level
@@ -556,7 +532,7 @@ function Combo()
     
   end
   
-  if STarget ~= nil then
+  --[[if STarget ~= nil then
   
     local ComboItem = Menu.Combo.Item
     
@@ -582,7 +558,7 @@ function Combo()
       
     end
     
-  end
+  end]]
   
 end
 
@@ -950,10 +926,10 @@ function KillSteal()
       CastI(enemy)
     end
     
-    if Items["Stalker"].ready and KillStealS and SBTargetDmg >= enemy.health and ValidTarget(enemy, S.range) then
+    --[[if Items["Stalker"].ready and KillStealS and SBTargetDmg >= enemy.health and ValidTarget(enemy, S.range) then
       CastS(enemy)
       return
-    end
+    end]]
     
     if Q.ready and KillStealQ and QTargetDmg >= enemy.health and ValidTarget(enemy, Q.range+Q.radius+100) then
       CastQ(enemy, "KillSteal")
@@ -1101,13 +1077,7 @@ function CastQ(unit, mode)
   QPos, QHitChance = HPred:GetPredict(HPred.Presets["Corki"]["Q"], unit, myHero)
   
   if mode == "Combo" and QHitChance >= Menu.HitChance.Combo.Q or mode == "Harass" and QHitChance >= Menu.HitChance.Harass.Q or mode == nil and QHitChance >= 1 then
-  
-    if VIP_USER and Menu.Misc.UsePacket then
-      Packet("S_CAST", {spellId = _Q, toX = QPos.x, toY = QPos.z, fromX = QPos.x, fromY = QPos.z}):send()
-    else
-      CastSpell(_Q, QPos.x, QPos.z)
-    end
-    
+    CastSpell(_Q, QPos.x, QPos.z)
   end
   
 end
@@ -1123,13 +1093,7 @@ function CastR(unit, mode)
   RPos, RHitChance = HPred:GetPredict(HPred.Presets["Corki"]["R"], unit, myHero, false, R.range)
   
   if mode == "Combo" and RHitChance >= Menu.HitChance.Combo.R or mode == "Harass" and RHitChance >= Menu.HitChance.Harass.R or mode == nil and RHitChance >= 1 then
-  
-    if VIP_USER and Menu.Misc.UsePacket then
-      Packet("S_CAST", {spellId = _R, toX = RPos.x, toY = RPos.z, fromX = RPos.x, fromY = RPos.z}):send()
-    else
-      CastSpell(_R, RPos.x, RPos.z)
-    end
-    
+    CastSpell(_R, RPos.x, RPos.z)
   end
   
 end
@@ -1137,49 +1101,25 @@ end
 ---------------------------------------------------------------------------------
 
 function CastI(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Ignite, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Ignite, enemy)
-  end
-  
+  CastSpell(Ignite, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function CastS(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Smite, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Smite, enemy)
-  end
-  
+  CastSpell(Smite, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function CastBC(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Items["BC"].slot, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Items["BC"].slot, enemy)
-  end
-  
+  CastSpell(Items["BC"].slot, enemy)
 end
 
 ---------------------------------------------------------------------------------
 
 function CastBRK(enemy)
-
-  if VIP_USER and Menu.Misc.UsePacket then
-    Packet("S_CAST", {spellId = Items["BRK"].slot, targetNetworkId = enemy.networkID}):send()
-  else
-    CastSpell(Items["BRK"].slot, enemy)
-  end
-  
+  CastSpell(Items["BRK"].slot, enemy)
 end
 
 ---------------------------------------------------------------------------------
