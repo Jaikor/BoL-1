@@ -1,4 +1,4 @@
-local Version = "1.26"
+local Version = "1.261"
 
 if myHero.charName ~= "Ezreal" then
   return
@@ -34,6 +34,7 @@ if VersionData then
       HTTF_Ezreal:ScriptMsg("New version available: v"..VersionData)
       HTTF_Ezreal:ScriptMsg("Updating, please don't press F9.")
       DelayAction(function() DownloadFile(UpdateURL, ScriptFilePath, function () HTTF_Ezreal:ScriptMsg("Successfully updated.: v"..Version.." => v"..VersionData..", Press F9 twice to load the updated version.") end) end, 3)
+      return
     else
       HTTF_Ezreal:ScriptMsg("You've got the latest version: v"..Version)
     end
@@ -51,7 +52,7 @@ end
 
 function OnLoad()
 
-  HTTF_Ezreal = HTTF_Ezreal()
+  local h = HTTF_Ezreal()
   
 end
 
@@ -59,7 +60,6 @@ end
 ---------------------------------------------------------------------------------
 
 function HTTF_Ezreal:__init()
-
   self:Variables()
   self:Menu()
   DelayAction(function() self:Orbwalk() end, 1)
@@ -67,14 +67,12 @@ function HTTF_Ezreal:__init()
   AddTickCallback(function() self:Tick() end)
   AddDrawCallback(function() self:Draw() end)
   AddAnimationCallback(function(unit, animation) self:Animation(unit, animation) end)
-  
 end
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
 function HTTF_Ezreal:Variables()
-
   self.HPred = HPrediction()
   
   self.IsRecall = false
@@ -98,17 +96,6 @@ function HTTF_Ezreal:Variables()
   self.R = {range = 1000, width = 320, ready}
   self.I = {range = 600, ready}
   self.S = {range = 760, ready}
-  
-  self.Items =
-  {
-  ["BC"] = {id=3144, range = 450, slot = nil, ready},
-  ["BRK"] = {id=3153, range = 450, slot = nil, ready},
-  ["Stalker"] = {id=3706, slot = nil, ready},
-  ["StalkerW"] = {id=3707, slot = nil},
-  ["StalkerM"] = {id=3708, slot = nil},
-  ["StalkerJ"] = {id=3709, slot = nil},
-  ["StalkerD"] = {id=3710, slot = nil}
-  }
   
   local S5SR = false
   local TT = false
@@ -203,7 +190,6 @@ function HTTF_Ezreal:Variables()
   self.EnemyHeroes = GetEnemyHeroes()
   self.EnemyMinions = minionManager(MINION_ENEMY, self.Q.range, myHero, MINION_SORT_MAXHEALTH_DEC)
   self.JungleMobs = minionManager(MINION_JUNGLE, self.Q.range, myHero, MINION_SORT_MAXHEALTH_DEC)
-  
 end
 
 ---------------------------------------------------------------------------------
@@ -237,9 +223,9 @@ function HTTF_Ezreal:Menu()
       self.Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     self.Menu.Combo:addParam("R2", "Use R (multiple target)", SCRIPT_PARAM_ONOFF, true)
     self.Menu.Combo:addParam("R3", "Use R min count", SCRIPT_PARAM_SLICE, 3, 2, 5, 0)
-      self.Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+      --[[self.Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     self.Menu.Combo:addParam("Item", "Use Items", SCRIPT_PARAM_ONOFF, true)
-      self.Menu.Combo:addParam("BRK", "Use BRK if my own HP < x%", SCRIPT_PARAM_SLICE, 40, 0, 100, 0)
+      self.Menu.Combo:addParam("BRK", "Use BRK if my own HP < x%", SCRIPT_PARAM_SLICE, 40, 0, 100, 0)]]
       
   self.Menu:addSubMenu("Clear Settings", "Clear")
   
@@ -467,14 +453,6 @@ function HTTF_Ezreal:Checks()
   self.I.ready = self.Ignite ~= nil and myHero:CanUseSpell(self.Ignite) == READY
   self.S.ready = self.Smite ~= nil and myHero:CanUseSpell(self.Smite) == READY
   
-  for _, item in pairs(self.Items) do
-    item.slot = GetInventorySlotItem(item.id)
-  end
-  
-  self.Items["BC"].ready = self.Items["BC"].slot and myHero:CanUseSpell(self.Items["BC"].slot) == READY
-  self.Items["BRK"].ready = self.Items["BRK"].slot and myHero:CanUseSpell(self.Items["BRK"].slot) == READY
-  self.Items["Stalker"].ready = self.Smite ~= nil and (self.Items["Stalker"].slot or self.Items["StalkerW"].slot or self.Items["StalkerM"].slot or self.Items["StalkerJ"].slot or self.Items["StalkerD"].slot) and myHero:CanUseSpell(self.Smite) == READY
-  
   self.Q.level = myHero:GetSpellData(_Q).level
   self.W.level = myHero:GetSpellData(_W).level
   self.E.level = myHero:GetSpellData(_E).level
@@ -545,7 +523,7 @@ function HTTF_Ezreal:Combo()
   local ComboQ2 = self.Menu.Combo.Q2
   local ComboW = self.Menu.Combo.W
   local ComboW2 = self.Menu.Combo.W2
-  local ComboItem = self.Menu.Combo.Item
+  --local ComboItem = self.Menu.Combo.Item
 
   if self.QTarget ~= nil and ComboQ and self.Q.ready and ComboQ2 <= self:ManaPercent() and ValidTarget(self.QTarget, self.Q.range) then
     self:CastQ(self.QTarget, "Combo")
@@ -616,7 +594,7 @@ function HTTF_Ezreal:Combo()
     
   end
   
-  if self.STarget ~= nil and ComboItem then
+  --[[if self.STarget ~= nil and ComboItem then
   
     if self.Items["Stalker"].ready and ValidTarget(self.STarget, self.S.range) then
       self:CastS(self.STarget)
@@ -637,7 +615,7 @@ function HTTF_Ezreal:Combo()
       
     end
     
-  end
+  end]]
   
 end
 
@@ -870,10 +848,10 @@ function HTTF_Ezreal:KillSteal()
       self:CastI(enemy)
     end
     
-    if self.Items["Stalker"].ready and KillStealS and SBTargetDmg >= enemy.health and ValidTarget(enemy, self.S.range) then
+    --[[if self.Items["Stalker"].ready and KillStealS and SBTargetDmg >= enemy.health and ValidTarget(enemy, self.S.range) then
       self:CastS(enemy)
       return
-    end
+    end]]
     
     if self.Q.ready and KillStealQ and QTargetDmg >= enemy.health and ValidTarget(enemy, self.Q.range) then
       self:CastQ(enemy, "KillSteal")
