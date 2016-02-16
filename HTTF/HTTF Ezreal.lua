@@ -1,4 +1,4 @@
-local Version = "1.261"
+local Version = "1.27"
 
 if myHero.charName ~= "Ezreal" then
   return
@@ -74,6 +74,7 @@ end
 
 function HTTF_Ezreal:Variables()
   self.HPred = HPrediction()
+  self.HP_Q = HPSkillshot({type = "DelayLine", delay = 0.25, range = 1200, speed = 2000, collisionH = false, collisionM = true, width = 120})
   
   self.IsRecall = false
   self.RebornLoaded, self.RevampedLoaded, self.MMALoaded, self.NOWLoaded, self.SxOrbLoaded, self.SOWLoaded = false, false, false, false, false, false, false
@@ -95,7 +96,7 @@ function HTTF_Ezreal:Variables()
   self.E = {range = 475, ready}
   self.R = {range = 1000, width = 320, ready}
   self.I = {range = 600, ready}
-  self.S = {range = 760, ready}
+  self.S = {range = 560, ready}
   
   local S5SR = false
   local TT = false
@@ -344,16 +345,9 @@ end
 
 function HTTF_Ezreal:Orbwalk()
 
-  if _G.AutoCarry then
-  
-    if _G.Reborn_Initialised then
-      self.RebornLoaded = true
-      self:ScriptMsg("Found SAC: Reborn.")
-    else
-      self.RevampedLoaded = true
-      self:ScriptMsg("Found SAC: Revamped.")
-    end
-    
+  if _G.AutoCarry and _G.Reborn_Initialised then
+    self.RebornLoaded = true
+    self:ScriptMsg("Found SAC: Reborn.")
   elseif _G.Reborn_Loaded then
     DelayAction(function() self:Orbwalk() end, 1)
   elseif _G.MMA_IsLoaded then
@@ -985,7 +979,7 @@ function HTTF_Ezreal:CastQ(unit, mode)
     return
   end
   
-  self.QPos, self.QHitChance = self.HPred:GetPredict(self.HPred.Presets["Ezreal"]["Q"], unit, myHero)
+  self.QPos, self.QHitChance = self.HPred:GetPredict(self.HP_Q, unit, myHero)
   
   if mode == "Combo" and self.QHitChance >= self.Menu.HitChance.Combo.Q or mode == "Harass" and self.QHitChance >= self.Menu.HitChance.Harass.Q or (mode == "LastHit" or mode == "JSteal" or mode == "KillSteal" or mode == nil) and self.QHitChance > 0 then
     CastSpell(_Q, self.QPos.x, self.QPos.z)
@@ -1031,7 +1025,7 @@ function HTTF_Ezreal:CastR(unit, mode)
     self.RPos, self.RHitChance = self.HPred:GetPredict(self.HPred.Presets["Ezreal"]["R"], unit, myHero)
   end
   
-  if (mode == "Combo" or mode == "Combo2" and self.RNoH >= ComboR3 or mode == nil) and self.RHitChance > 0 then
+  if (mode == "Combo" or mode == nil) and self.RHitChance > 0 or mode == "Combo2" and self.RNoH >= ComboR3 then
     CastSpell(_R, self.RPos.x, self.RPos.z)
   end
   
