@@ -1,4 +1,4 @@
-local Version = 1.28
+local Version = 1.281
 
 if myHero.charName ~= "Viktor" then
   return
@@ -374,7 +374,7 @@ function HTTF_Viktor:Variables()
   
   self.Q = {range = 700, ready}
   self.W = {range = 700, radius = 325, ready}
-  self.E = {range1 = 550, range2 = 700, width = 180, ready}
+  self.E = {range1 = 550, range2 = 700, width = 160, ready}
   self.R = {range = 700, radius = 325, ready}
   self.I = {range = 600, ready}
   self.S = {range = 760, ready}
@@ -1856,7 +1856,7 @@ function OnSendPacket(p)
       p.pos = 31
       
       if p:Decode1() == 0xEC and not HTTF_Viktor:RHit() then
-			  HTTF_Viktor:ScriptMsg("Spell R is blocked")
+        HTTF_Viktor:ScriptMsg("Spell R is blocked")
         p:Block()
       end
       
