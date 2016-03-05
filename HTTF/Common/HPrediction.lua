@@ -1,4 +1,4 @@
-_G.HPrediction_Version = 1.401
+_G.HPrediction_Version = 1.402
 
 local myHero = myHero
 local math, table, os = math, table, os
@@ -24,12 +24,6 @@ end
 
 class("HPredUpdate")
 class("HPrediction")
-
----------------------------------------------------------------------------------
-
-function HPrediction:ScriptMsg(msg)
-  print("<font color=\"#00fa9a\"><b>HPrediction:</b></font> <font color=\"#FFFFFF\">"..msg.."</font>")
-end
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
@@ -322,6 +316,11 @@ end
 ---------------------------------------------------------------------------------
 
 function HPrediction:__init()
+
+  if _G.HPrediction_Init then
+    return
+  end
+  
   self:Update()
   self:Variables()
   self:Menu()
@@ -334,6 +333,8 @@ function HPrediction:__init()
   AddRemoveBuffCallback(function(unit, buff) self:OnRemoveBuff(unit, buff) end)
   --AddProcessSpellCallback(function(unit, spell) self:OnProcessSpell(unit, spell) end)
   AddProcessAttackCallback(function(...) self:OnProcessAttack(...) end)
+  
+  _G.HPrediction_Init = true
 end
 
 ---------------------------------------------------------------------------------
@@ -1843,7 +1844,7 @@ _G.HPrediction.Presets["Cassiopeia"] =
 {
   ["Q"] = HPSkillshot({type = "PromptCircle", delay = 0.7, range = 850, radius = 200}),
   ["W"] = HPSkillshot({type = "DelayCircle", delay = 0.25, range = 850, radius = 147, speed = 2500}),
-  ["R"] = HPSkillshot({type = "Triangle", delay = 0.5, range = 825, angle = 80})
+  ["R"] = HPSkillshot({type = "Triangle", delay = 0.6, range = 825, angle = 80})
 }
 _G.HPrediction.Presets["Corki"] = 
 {
