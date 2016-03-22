@@ -4,7 +4,7 @@ if myHero.charName ~= "Viktor" then
   return
 end
 
-class 'ScriptUpdate'
+--class 'ScriptUpdate'
 class 'HTTF_Viktor'
 
 require 'HPrediction'
@@ -15,7 +15,7 @@ end
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-
+--[[
 function ScriptUpdate:__init(LocalVersion,UseHttps, Host, VersionPath, ScriptPath, SavePath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion,CallbackError)
   self.LocalVersion = LocalVersion
   self.Host = Host
@@ -299,7 +299,7 @@ function ScriptUpdate:DownloadUpdate()
   end
   
 end
-
+]]--
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
@@ -313,7 +313,7 @@ end
 ---------------------------------------------------------------------------------
 
 function HTTF_Viktor:__init()
-  self:Update()
+  --self:Update()
   self:Variables()
   self:Menu()
   
@@ -327,7 +327,7 @@ function HTTF_Viktor:__init()
 end
 
 ---------------------------------------------------------------------------------
-
+--[[
 function HTTF_Viktor:Update()
 
   local ToUpdate = {}
@@ -342,7 +342,7 @@ function HTTF_Viktor:Update()
   ToUpdate.CallbackError = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HTTF Viktor] </b></font> <font color=\"#FFFFFF\">Error while Downloading. Please try again.</b></font>") end
   ScriptUpdate(Version, true, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath, ToUpdate.SavePath, ToUpdate.CallbackUpdate,ToUpdate.CallbackNoUpdate, ToUpdate.CallbackNewVersion,ToUpdate.CallbackError)
 end
-
+]]--
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
