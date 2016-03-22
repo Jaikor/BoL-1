@@ -5,7 +5,7 @@ if myHero.charName ~= "Orianna" then
   return
 end
 
-class 'OriannaUpdate'
+--class 'OriannaUpdate'
 class "HTTF_Orianna"
 
 function HTTF_Orianna:ScriptMsg(msg)
@@ -14,7 +14,7 @@ end
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-
+--[[
 function OriannaUpdate:__init(LocalVersion,UseHttps, Host, VersionPath, ScriptPath, SavePath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion,CallbackError)
   self.LocalVersion = LocalVersion
   self.Host = Host
@@ -298,7 +298,7 @@ function OriannaUpdate:DownloadUpdate()
   end
   
 end
-
+]]--
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
@@ -313,7 +313,7 @@ end
 ---------------------------------------------------------------------------------
 
 function HTTF_Orianna:__init()
-  self:Update()
+  --self:Update()
   self:Variables()
   self:Menu()
   
@@ -326,7 +326,7 @@ function HTTF_Orianna:__init()
 end
 
 ---------------------------------------------------------------------------------
-
+--[[
 function HTTF_Orianna:Update()
 
   local Script = {}
@@ -341,7 +341,7 @@ function HTTF_Orianna:Update()
   Script.CallbackError = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Error while Downloading. Please try again.</b></font>") end
   OriannaUpdate(Version, true, Script.Host, Script.VersionPath, Script.ScriptPath, Script.SavePath, Script.CallbackUpdate,Script.CallbackNoUpdate, Script.CallbackNewVersion,Script.CallbackError)
 end
-
+]]--
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
