@@ -4,7 +4,13 @@ if myHero.charName ~= "Viktor" then
   return
 end
 
---class 'ScriptUpdate'
+--AES code for cryptor
+for i, v in pairs(_ENV) do
+if v and type(v) == "function" and i:sub(1,2) == "On" then
+_G["Add"..i:sub(3,i:len()).."Callback"](v)
+end
+end
+
 class 'HTTF_Viktor'
 
 require 'HPrediction'
@@ -15,14 +21,21 @@ end
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
 function OnLoad()
 
-HTTF_Viktor = HTTF_Viktor()
-
+  HTTF_Viktor = HTTF_Viktor()
+  
 end
 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
 function HTTF_Viktor:__init()
-  --self:Update()
+
   self:Variables()
   self:Menu()
   
@@ -555,7 +568,9 @@ function HTTF_Viktor:Combo()
   local ComboR = self.Menu.Combo.R
   
   if self.QTarget ~= nil and ComboQ and self:Ready(_Q) and 5*self:Level(_Q)+40 <= myHero.mana and ValidTarget(self.QTarget, self.Q.range) then
+    -- print("castq")
     self:CastQ(self.QTarget)
+	--print("castq11111")
   end
   
   if self.WTarget ~= nil and ComboW and self:Ready(_W) and ComboW2 <= self:ManaPercent() and ValidTarget(self.WTarget, self.W.range) then
@@ -1100,7 +1115,7 @@ end
 
 function HTTF_Viktor:CastQ(unit, mode)
 
-  if unit.dead or unit.health == 0 or mode ~= "KillSteal" and not self:OrbwalkCanMove() then
+  if unit.dead or unit.health == 0 and not self:OrbwalkCanMove() then
     return
   end
   
@@ -1574,9 +1589,3 @@ function HTTF_Viktor:RHit()
   
   return false
 end
-
-
-
-
-
-
