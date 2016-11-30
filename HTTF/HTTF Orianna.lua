@@ -1,11 +1,10 @@
-local Version = 1.305
+local Version = 1.309
 local FileName = GetCurrentEnv().FILE_NAME
 
 if myHero.charName ~= "Orianna" then
   return
 end
 
---class 'OriannaUpdate'
 class "HTTF_Orianna"
 
 function HTTF_Orianna:ScriptMsg(msg)
@@ -14,296 +13,292 @@ end
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
---[[
-function OriannaUpdate:__init(LocalVersion,UseHttps, Host, VersionPath, ScriptPath, SavePath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion,CallbackError)
-  self.LocalVersion = LocalVersion
-  self.Host = Host
-  self.VersionPath = '/BoL/TCPUpdater/GetScript'..(UseHttps and '5' or '6')..'.php?script='..self:Base64Encode(self.Host..VersionPath)..'&rand='..math.random(99999999)
-  self.ScriptPath = '/BoL/TCPUpdater/GetScript'..(UseHttps and '5' or '6')..'.php?script='..self:Base64Encode(self.Host..ScriptPath)..'&rand='..math.random(99999999)
-  self.SavePath = SavePath
-  self.CallbackUpdate = CallbackUpdate
-  self.CallbackNoUpdate = CallbackNoUpdate
-  self.CallbackNewVersion = CallbackNewVersion
-  self.CallbackError = CallbackError
-  AddDrawCallback(function() self:OnDraw() end)
-  self:CreateSocket(self.VersionPath)
-  self.DownloadStatus = 'Connect to Server for VersionInfo'
-  AddTickCallback(function() self:GetOnlineVersion() end)
-end
+-- S1mple Updater class thanks mate ;) 
 
-function OriannaUpdate:print(str)
-  print('<font color="#FFFFFF">'..os.clock()..': '..str)
-end
-
-function OriannaUpdate:OnDraw()
-
-  if self.DownloadStatus ~= 'Downloading Script (100%)' and self.DownloadStatus ~= 'Downloading VersionInfo (100%)'then
-    DrawText('Download Status: '..(self.DownloadStatus or 'Unknown'),50,10,50,ARGB(0xFF,0xFF,0xFF,0xFF))
-  end
-  
-end
-
-function OriannaUpdate:CreateSocket(url)
-
-  if not self.LuaSocket then
-    self.LuaSocket = require("socket")
-  else
-    self.Socket:close()
-    self.Socket = nil
-    self.Size = nil
-    self.RecvStarted = false
-  end
-  
-  self.LuaSocket = require("socket")
-  self.Socket = self.LuaSocket.tcp()
-  self.Socket:settimeout(0, 'b')
-  self.Socket:settimeout(99999999, 't')
-  self.Socket:connect('sx-bol.eu', 80)
-  self.Url = url
-  self.Started = false
-  self.LastPrint = ""
-  self.File = ""
-end
-
-function OriannaUpdate:Base64Encode(data)
-
-  local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  
-  return ((data:gsub('.', function(x)
-  
-    local r,b='',x:byte()
-    
-    for i=8,1,-1 do
-      r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0')
-    end
-    
-    return r;
-  end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
-  
-    if (#x < 6) then
-      return ''
-    end
-    
-    local c=0
-    
-    for i=1,6 do
-      c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0)
-    end
-    
-    return b:sub(c+1,c+1)
-  end)..({ '', '==', '=' })[#data%3+1])
-  
-end
-
-function OriannaUpdate:GetOnlineVersion()
-
-  if self.GotScriptVersion then
-    return
-  end
-  
-  self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
-  
-  if self.Status == 'timeout' and not self.Started then
-    self.Started = true
-    self.Socket:send("GET "..self.Url.." HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
-  end
-  
-  if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
-    self.RecvStarted = true
-    self.DownloadStatus = 'Downloading VersionInfo (0%)'
-  end
-  
-  self.File = self.File .. (self.Receive or self.Snipped)
-  
-  if self.File:find('</s'..'ize>') then
-  
-    if not self.Size then
-      self.Size = tonumber(self.File:sub(self.File:find('<si'..'ze>')+6,self.File:find('</si'..'ze>')-1))
-    end
-    
-    if self.File:find('<scr'..'ipt>') then
-    
-      local _,ScriptFind = self.File:find('<scr'..'ipt>')
-      local ScriptEnd = self.File:find('</scr'..'ipt>')
-      
-      if ScriptEnd then
-        ScriptEnd = ScriptEnd-1
-      end
-      
-      local DownloadedSize = self.File:sub(ScriptFind+1,ScriptEnd or -1):len()
-      
-      self.DownloadStatus = 'Downloading VersionInfo ('..math.round(100/self.Size*DownloadedSize,2)..'%)'
-    end
-    
-  end
-  
-  if self.File:find('</scr'..'ipt>') then
-    self.DownloadStatus = 'Downloading VersionInfo (100%)'
-    
-    local a,b = self.File:find('\r\n\r\n')
-    
-    self.File = self.File:sub(a,-1)
-     self.NewFile = ''
-    
-    for line,content in ipairs(self.File:split('\n')) do
-    
-      if content:len() > 5 then
-        self.NewFile = self.NewFile .. content
-      end
-      
-    end
-    
-    local HeaderEnd, ContentStart = self.File:find('<scr'..'ipt>')
-    local ContentEnd, _ = self.File:find('</sc'..'ript>')
-    
-    if not ContentStart or not ContentEnd then
-    
-      if self.CallbackError and type(self.CallbackError) == 'function' then
-        self.CallbackError()
-      end
-      
-    else
-      self.OnlineVersion = (Base64Decode(self.File:sub(ContentStart+1,ContentEnd-1)))
-      self.OnlineVersion = tonumber(self.OnlineVersion)
-      
-      if self.OnlineVersion > self.LocalVersion then
-      
-        if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
-          self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
+local function class(base, init)
+    local c = {}
+    if not init and type(base) == 'function' then
+        init = base
+        base = nil
+    elseif type(base) == 'table' then
+        for i,v in pairs(base) do
+            c[i] = v
         end
-        
-        self:CreateSocket(self.ScriptPath)
-        self.DownloadStatus = 'Connect to Server for ScriptDownload'
-        AddTickCallback(function() self:DownloadUpdate() end)
-      else
-        
-        if self.CallbackNoUpdate and type(self.CallbackNoUpdate) == 'function' then
-          self.CallbackNoUpdate(self.LocalVersion)
-        end
-        
-      end
-      
+        c._base = base
     end
-    
-    self.GotScriptVersion = true
-  end
-  
+    c.__index = c
+
+    local mt = {}
+    mt.__call = function(class_tbl, ...)
+        local obj = {}
+        setmetatable(obj,c)
+        if init then
+            init(obj,...)
+        else
+            if base and base.init then
+                base.init(obj, ...)
+            end
+        end
+        return obj
+    end
+    c.init = init
+    c.is_a = function(self, klass)
+        local m = getmetatable(self)
+        while m do
+            if m == klass then return true end
+            m = m._base
+        end
+        return false
+    end
+    setmetatable(c, mt)
+    return c
 end
 
-function OriannaUpdate:DownloadUpdate()
+local downloads = {}
+function AddDownload(server, server_path, localpath, port, data, options)
+	local function sprite_file_exists()
+		local file = io.open(SPRITE_PATH.."\\S1mple\\Downloader\\Sprite.png")
+		if file then file:close() return true else return false end
+	end
+	if sprite_file_exists() then
+		local dlsize = #downloads
+		local pos_y = 20+dlsize*30
+		downloads[#downloads+1] = FancyDownload(server, server_path, localpath, port, data, 20, pos_y, false, options, dlsize)
+	else
+		--Main Download
+		local dlsize = #downloads
+		local pos_y = 20+dlsize*30
+		downloads[#downloads+1] = FancyDownload(server, server_path, localpath, port, data, 20, pos_y, true, options, dlsize)
 
-  if self.GotScriptUpdate then
-    return
-  end
-  
-  self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
-  
-  if self.Status == 'timeout' and not self.Started then
-    self.Started = true
-    self.Socket:send("GET "..self.Url.." HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
-  end
-  
-  if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
-    self.RecvStarted = true
-    self.DownloadStatus = 'Downloading Script (0%)'
-  end
-  
-  self.File = self.File .. (self.Receive or self.Snipped)
-  
-  if self.File:find('</si'..'ze>') then
-  
-    if not self.Size then
-      self.Size = tonumber(self.File:sub(self.File:find('<si'..'ze>')+6,self.File:find('</si'..'ze>')-1))
-    end
-    
-    if self.File:find('<scr'..'ipt>') then
-    
-      local _,ScriptFind = self.File:find('<scr'..'ipt>')
-      local ScriptEnd = self.File:find('</scr'..'ipt>')
-      
-      if ScriptEnd then
-        ScriptEnd = ScriptEnd-1
-      end
-      
-      local DownloadedSize = self.File:sub(ScriptFind+1,ScriptEnd or -1):len()
-      
-      self.DownloadStatus = 'Downloading Script ('..math.round(100/self.Size*DownloadedSize,2)..'%)'
-    end
-    
-  end
-  
-  if self.File:find('</scr'..'ipt>') then
-    self.DownloadStatus = 'Downloading Script (100%)'
-    
-    local a,b = self.File:find('\r\n\r\n')
-    
-    self.File = self.File:sub(a,-1)
-    self.NewFile = ''
-    
-    for line,content in ipairs(self.File:split('\n')) do
-    
-      if content:len() > 5 then
-        self.NewFile = self.NewFile .. content
-      end
-      
-    end
-    
-    local HeaderEnd, ContentStart = self.NewFile:find('<sc'..'ript>')
-    local ContentEnd, _ = self.NewFile:find('</scr'..'ipt>')
-    
-    if not ContentStart or not ContentEnd then
-      
-      if self.CallbackError and type(self.CallbackError) == 'function' then
-        self.CallbackError()
-      end
-      
-    else
-      
-      local newf = self.NewFile:sub(ContentStart+1,ContentEnd-1)
-      local newf = newf:gsub('\r','')
-      
-      if newf:len() ~= self.Size then
-      
-        if self.CallbackError and type(self.CallbackError) == 'function' then
-          self.CallbackError()
-        end
-        
-        return
-      end
-      
-      local newf = Base64Decode(newf)
-      
-      if type(load(newf)) ~= 'function' then
-      
-        if self.CallbackError and type(self.CallbackError) == 'function' then
-          self.CallbackError()
-        end
-        
-      else
-      
-        local f = io.open(self.SavePath,"w+b")
-        
-        f:write(newf)
-        f:close()
-        
-        if self.CallbackUpdate and type(self.CallbackUpdate) == 'function' then
-          self.CallbackUpdate(self.OnlineVersion,self.LocalVersion)
-        end
-        
-      end
-      
-    end
-    
-    self.GotScriptUpdate = true
-  end
-  
+		--Download sprite for next time
+		local dlsize = #downloads
+		local pos_y = 20+dlsize*30
+		downloads[#downloads+1] = FancyDownload("s1mplescripts.de", "/S1mple/Scripts/BolStudio/FancyDownloader/Sprite.png", SPRITE_PATH.."\\S1mple\\Downloader\\Sprite.png", 80, {}, 20, pos_y, true)
+	end
 end
-]]--
+
+FancyDownload = class(function(fd,server, server_path, localpath, port, data, pos_x, pos_y, ncp, options, i)
+    assert(type(server) == "string" or type(server_path) == "string", "FancyDownload: wrong argument types (<string><string> expected for server, server_path)")
+    if not data then data = {} end
+    if not port then port = 80 end
+    if not options then options = {} end
+    if not ncp then ncp = false end
+    fd.server = server
+    fd.server_path = server_path
+    fd.localpath = localpath
+    fd.port = port
+    fd.data = data
+    fd.progress = 0
+    fd.ncp = ncp
+    fd.pos_x = pos_x
+    fd.pos_y = pos_y
+    fd.file_size = math.huge
+    fd.lua_socket = require("socket")
+    fd.download_tcp = nil
+    fd.response = ""
+    fd.status = ""
+    fd.cutheader = false
+    fd.bytesperchunk = 8096
+    fd.nicename = ""
+    fd.i = i
+    fd.c_time = 0
+    fd.passed_time = 0
+    fd.after_download_text = nil
+
+    fd:parseoptions(options)
+    fd:ncp_special_checks()
+    fd:LoadSprite()
+    fd:StartDownload()
+    AddDrawCallback(function ()
+    	fd:DrawProgress()
+    end)
+    AddUnloadCallback(function ()
+    	fd:Cleanup()
+    end)
+end)
+
+function FancyDownload:ncp_special_checks()
+	CreateDirectory(SPRITE_PATH.."\\S1mple")
+	CreateDirectory(SPRITE_PATH.."\\S1mple\\Downloader")
+end
+
+function FancyDownload:parseoptions(options)
+	for _,v in pairs(options) do
+		if v.key == "bps" then
+			self.bytesperchunk = v.value
+		elseif v.key == "nicename" then
+			self.nicename = v.value
+		elseif v.key == "afterdltext" then
+			self.after_download_text = v.value
+		end
+	end
+end
+
+function FancyDownload:StartDownload()
+	self:GetFileSize()
+	self.download_tcp = self.lua_socket.connect(self.server,self.port)
+	local requeststring = "GET "..self.server_path
+	local first = true
+	for i,v in pairs(self.data)do
+		requeststring = requeststring..(first and "?" or "&")..i.."="..v
+		first = false
+	end
+	requeststring = requeststring.. " HTTP/1.0\r\nHost: "..self.server.."\r\n\r\n"
+	self.download_tcp:send(requeststring)
+	AddTickCallback(function ()
+		self:Tick()
+	end)
+end
+
+function FancyDownload:Tick()
+	if self.status == "timeout" or self.status == "closed" then
+		self:WriteToFile(self.response)
+		self.status = "end"
+		self:Cleanup()
+	elseif self.status ~= "end" then
+		s,status, partial = self.download_tcp:receive(self.bytesperchunk)
+		self.status = status
+		self.response = self.response..(s or partial)
+
+		local headerend = string.find(self.response, "\r\n\r\n")
+		if (headerend and not self.cutheader) then
+			self.response = self.response:sub(headerend+4)
+			self.cutheader = true
+		end
+		self.progress = self.response:len()/self.file_size*100
+		if(math.floor(os.clock()) > self.c_time)then
+			self.passed_time = self.passed_time + 1
+		end
+	end
+end
+
+function FancyDownload:GetFileSize()
+	local connection_tcp = self.lua_socket.connect(self.server,self.port)
+	local requeststring = "HEAD "..self.server_path
+	local first = true
+	for i,v in pairs(self.data)do
+		requeststring = requeststring..(first and "?" or "&")..i.."="..v
+		first = false
+	end
+	requeststring = requeststring.. " HTTP/1.0\r\nHost: "..self.server.."\r\n\r\n"
+	connection_tcp:send(requeststring)
+	local response = ""
+	local status
+	while true do
+		s,status, partial = connection_tcp:receive('*a')
+		response = response..(s or partial)
+		if(status == "closed" or status == "timeout")then
+			break
+		end
+	end
+	local snip_1 = string.find(response, "Length:")+8
+	response = response:sub(snip_1)
+	local snip_2 = string.find(response, "\n")-2
+	response = response:sub(0,snip_2)
+	self.file_size = tonumber(response)
+end
+
+function FancyDownload:DrawProgress()
+	if self.ncp then return end
+
+	--Background
+	self.sprite:DrawEx(Rect(0,10,417,25), D3DXVECTOR3(0,0,0), D3DXVECTOR3(self.pos_x,self.pos_y,0), 255)
+	--Foreground
+	self.sprite:DrawEx(Rect(0,0,self.progress*4.17,10), D3DXVECTOR3(0,0,0), D3DXVECTOR3(self.pos_x+3,self.pos_y+2,0), 255)
+	if self.status == "end" then
+		if self.after_download_text then
+			DrawTextA(self.after_download_text,12, self.pos_x+3,self.pos_y-12)
+		else
+			DrawTextA((self.nicename or self.localpath).. " downloaded",12, self.pos_x+3,self.pos_y-12)
+		end
+	else
+		DrawTextA((self.nicename or self.localpath).." Speed: "..math.floor(self.response:len()/self.passed_time).." bytes/sec",12, self.pos_x+3,self.pos_y-12)
+	end
+end
+
+function FancyDownload:LoadSprite()
+	if self.ncp then return end
+	self.sprite = GetSprite("S1mple\\Downloader\\Sprite.png")
+end
+
+function FancyDownload:Cleanup()
+	if not self.ncp and self.sprite then
+		self.sprite:Release()
+	end
+end
+
+function FancyDownload:WriteToFile(text)
+	local file = io.open(self.localpath, "wb")
+	file:write(tostring(text))
+	file:close()
+end
+
+function TCPGetRequest(server, path, data, port)
+	local start_t = os.clock()
+	local port = port or 80
+	local data = data or {}
+	local lua_socket = require("socket")
+	local connection_tcp = lua_socket.connect(server,port)
+	local requeststring = "GET "..path
+	local first = true
+
+	for i,v in pairs(data) do
+		requeststring = requeststring..(first and "?" or "&")..i.."="..v
+		first = false
+	end
+	
+	requeststring = requeststring.. " HTTP/1.0\r\nHost: "..server.."\r\n\r\n"
+	connection_tcp:send(requeststring)
+	local response = ""
+	local status
+	while true do
+		s,status, partial = connection_tcp:receive('*a')
+		response = response..(s or partial)
+		if(status == "closed" or status == "timeout")then
+			break
+		end
+	end
+	local end_t = os.clock()
+	local start_content = response:find("\r\n\r\n")+4
+	response = response:sub(start_content)
+	return response, status, end_t-start_t
+end
+
+function UpdateMe(base_url, version_uri, local_version, file_uri, save_path, port, version_data, file_data, options)
+	--Check if update exists
+	local r = TCPGetRequest(base_url, version_uri, version_data, port)
+	if not r or not tonumber(r) then
+		print("[FancyDownloader] There was an error checking the version file")
+		return
+	end
+
+	if tonumber(r) > local_version then
+		AddDownload(base_url, file_uri, save_path, port, file_data, options)
+	else
+		print("[FancyDownloader] No update found")
+	end
+end
+
+
+
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
+
+function DownloadHpred()
+	print("Downloading HPrediction, please don't reload script")
+	DownloadFile("https://raw.githubusercontent.com/Jaikor/BoL-1/master/HTTF/Common/HPrediction.lua", LIB_PATH.."HPrediction.lua", function() 
+		print("Finished downloading HPrediction, please reload script !")
+		DelayAction(function() require("HPrediction") end, 1)
+	end)
+end
+
 
 function OnLoad()
+	 UpdateMe("s1mplescripts.de", "/Jaikor/BoL/Versions/Orianna.version", Version, "/Jaikor/BoL/Scripts/HTTF%20Orianna.lua", SCRIPT_PATH.."HTTF Orianna.lua", 80, {}, {}, {{key = "HTTF Orianna", value = "HTTF Orianna"}, {key = "Download Finished.", value = "Please reload me F9x2"}})
   require 'HPrediction'
+	if not FileExist(LIB_PATH .. "/HPrediction.lua") then
+		DownloadHpred()
+	end
   
   local H = HTTF_Orianna()
   
@@ -313,7 +308,6 @@ end
 ---------------------------------------------------------------------------------
 
 function HTTF_Orianna:__init()
-  --self:Update()
   self:Variables()
   self:Menu()
   
@@ -326,22 +320,6 @@ function HTTF_Orianna:__init()
 end
 
 ---------------------------------------------------------------------------------
---[[
-function HTTF_Orianna:Update()
-
-  local Script = {}
-  
-  Script.Host = "raw.githubusercontent.com"
-  Script.VersionPath = "/BolHTTF/BoL/master/HTTF/Version/HTTF%20Orianna.version"
-  Script.ScriptPath =  "/BolHTTF/BoL/master/HTTF/HTTF%20Orianna.lua"
-  Script.SavePath = SCRIPT_PATH .. FileName
-  Script.CallbackUpdate = function(NewVersion, OldVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Updated to "..NewVersion..". </b></font>") end
-  Script.CallbackNoUpdate = function(OldVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">No Updates Found</b></font>") end
-  Script.CallbackNewVersion = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">New Version found ("..NewVersion.."). Please wait until its downloaded</b></font>") end
-  Script.CallbackError = function(NewVersion) print("<font color=\"#00FA9A\"><b>[HPrediction] </b></font> <font color=\"#FFFFFF\">Error while Downloading. Please try again.</b></font>") end
-  OriannaUpdate(Version, true, Script.Host, Script.VersionPath, Script.ScriptPath, Script.SavePath, Script.CallbackUpdate,Script.CallbackNoUpdate, Script.CallbackNewVersion,Script.CallbackError)
-end
-]]--
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
@@ -671,7 +649,7 @@ function HTTF_Orianna:Orbwalk()
       self:ScriptMsg("Found SAC: Reborn.")
     else
       self.RevampedLoaded = true
-      self:ScriptMsg("Found SAC: Revamped.")
+      self:ScriptMsg("Found SAC: Reborn.")
     end
     
   elseif _G.Reborn_Loaded then
