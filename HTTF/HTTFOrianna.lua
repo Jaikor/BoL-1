@@ -294,7 +294,7 @@ end
 
 
 function OnLoad()
-	 UpdateMe("s1mplescripts.de", "/Jaikor/BoL/Versions/Orianna.version", Version, "/Jaikor/BoL/Scripts/HTTF%20Orianna.lua", SCRIPT_PATH.."HTTF Orianna.lua", 80, {}, {}, {{key = "HTTF Orianna", value = "HTTF Orianna"}, {key = "Download Finished.", value = "Please reload me F9x2"}})
+	 UpdateMe("s1mplescripts.de", "/Jaikor/BoL/Versions/Orianna.version", Version, "/Jaikor/BoL/Scripts/HTTFOrianna.lua", SCRIPT_PATH.."HTTF Orianna.lua", 80, {}, {}, {{key = "HTTF Orianna", value = "HTTF Orianna"}, {key = "Download Finished.", value = "Please reload me F9x2"}})
   require 'HPrediction'
 	if not FileExist(LIB_PATH .. "/HPrediction.lua") then
 		DownloadHpred()
