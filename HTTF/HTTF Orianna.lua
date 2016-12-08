@@ -1,4 +1,4 @@
-local Version = 1.309
+local Version = 1.311
 local FileName = GetCurrentEnv().FILE_NAME
 
 if myHero.charName ~= "Orianna" then
@@ -314,7 +314,7 @@ function HTTF_Orianna:__init()
   DelayAction(function() self:Orbwalk() end, 1)
   AddTickCallback(function() self:Tick() end)
   AddDrawCallback(function() self:Draw() end)
-  AddAnimationCallback(function(unit, animation) self:Animation(unit, animation) end)
+  AddAnimationCallback(function(unit, animation) self:Animation(unit, animation, hash) end)
   AddProcessSpellCallback(function(unit, spell) self:ProcessSpell(unit, spell) end)
   AddSendPacketCallback(function(p) self:OnSendPacket(p) end)
 end
@@ -1859,7 +1859,7 @@ end
 
 function HTTF_Orianna:CastQ(unit, mode)
 
-  if unit.dead then
+  if unit.dead or unit.health == 0 then
     return
   end
   
@@ -1875,7 +1875,7 @@ end
 
 function HTTF_Orianna:CastW(unit, mode)
 
-  if unit.dead then
+  if unit.dead or unit.health == 0 then
     return
   end
   
@@ -2231,7 +2231,7 @@ end
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 
-function HTTF_Orianna:Animation(unit, animation)
+function HTTF_Orianna:Animation(unit, animation, hash)
 
   if unit ~= myHero then
     return
@@ -2240,6 +2240,10 @@ function HTTF_Orianna:Animation(unit, animation)
   if animation == "Prop" then
     self.Ball = unit
   end
+  
+   if animation == "Idle1" or animation == "Spell1" then
+	self.Ball = unit
+	end
   
   if animation == "recall" then
     self.IsRecall = true
