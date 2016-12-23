@@ -1,4 +1,4 @@
-local Version = 1.313 local FileName = GetCurrentEnv().FILE_NAME
+local Version = 1.314 local FileName = GetCurrentEnv().FILE_NAME
 
 if myHero.charName ~= "Orianna" then
   return
@@ -1874,7 +1874,7 @@ end
 
 function HTTF_Orianna:CastW(unit, mode)
 
-  if unit.dead or unit.health == 0 then
+  if unit.dead then
     return
   end
   
@@ -2232,40 +2232,53 @@ end
 
 function HTTF_Orianna:Animation(unit, animation, hash)
 
-  if unit ~= myHero then
-    return
-  end
-  
-  if animation == "Prop" then
-    self.Ball = unit
-  end
-  
-   if animation == "Idle1" or animation == "Spell1" then
-	self.Ball = unit
+	if unit == nil or unit.networkID ~= myHero.networkID then
+		return
 	end
-  
-  if animation == "recall" then
-    self.IsRecall = true
-  elseif animation == "recall_winddown" or animation == "Run" or animation == "Spell1" or animation == "Spell2" or animation == "Spell3" or animation == "Spell4" then
-    self.IsRecall = false
-  end
-  
+	--[[if not animation:find("Idle") and animation ~= "Run" then
+		print("animation = " .. animation .. "\nhash = " .. hash)
+	end]]
+	if hash == "D93E11F8" then
+		self.Ball = unit
+	end
 end
 
 ---------------------------------------------------------------------------------
 
 function HTTF_Orianna:ProcessSpell(unit, spell)
 
-  if unit ~= myHero then
-    return
-  end
-  
+	if unit == nil or unit.networkID ~= myHero.networkID then
+		return
+	end
+	
   if spell.name == "OrianaIzunaCommand" then
-    self.Ball = Vector(spell.endPos)
+		self.Ball = Vector(spell.endPos)
   elseif spell.name == "OrianaRedactCommand" then
-    self.Ball = spell.target
+		self.Ball = spell.target
   end
   
+end
+
+
+---------------------------------------------------------------------------------
+function HTTF_Orianna:UpdateBuff(unit, buff, stacks)
+	if unit == nil or unit.networkID ~= myHero.networkID then
+		return
+	end
+	
+	if buff.name == "recall" then
+		self.IsRecall = true
+	end
+end
+
+---------------------------------------------------------------------------------
+function HTTF_Orianna:RemoveBuff(unit, buff)
+  if unit == nil or unit.networkID ~= myHero.networkID then
+  	return
+  			end
+  if buff.name == "recall" then
+	self.IsRecall = false
+	end
 end
 
 ---------------------------------------------------------------------------------
