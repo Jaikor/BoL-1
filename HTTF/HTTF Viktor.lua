@@ -4,12 +4,6 @@ if myHero.charName ~= "Viktor" then
   return
 end
 
---AES code for cryptor
-for i, v in pairs(_ENV) do
-if v and type(v) == "function" and i:sub(1,2) == "On" then
-_G["Add"..i:sub(3,i:len()).."Callback"](v)
-end
-end
 
 class 'HTTF_Viktor'
 
@@ -1162,9 +1156,10 @@ end
 
 ---------------------------------------------------------------------------------
 
+
 function HTTF_Viktor:CastR(unit, mode)
 
-  if unit.dead or unit.health == 0 then
+  if unit.dead then
     return
   end
   
@@ -1520,10 +1515,10 @@ function HTTF_Viktor:CreateObj(object)
 
   if object.name == "Storm" then
     self.Storm = object
-  elseif object.name == "Viktor_ChaosStorm_green.troy" then
+  elseif object.name == "Viktor_ChaosStorm_green" then
     self.Storm = object
   else
-    --print(object.name)
+   -- print(object.name)
   end
   
 end
@@ -1532,7 +1527,7 @@ end
 
 function HTTF_Viktor:DeleteObj(object)
 
-  if object.name == "Viktor_ChaosStorm_green.troy" then
+  if object.name == "Viktor_ChaosStorm_green" then
     self.Storm = nil
   else
     --print(object.name)
